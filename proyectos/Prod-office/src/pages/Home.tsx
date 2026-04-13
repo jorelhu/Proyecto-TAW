@@ -7,6 +7,9 @@ export default function Home() {
             <nav>
                 <Link to="/productos">Ir a Productos</Link>
             </nav>
+             <nav>
+                <Link to="/personal">Ir a Productos</Link>
+            </nav>
         </div>
     );
 }
