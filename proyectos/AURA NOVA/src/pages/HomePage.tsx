@@ -62,7 +62,7 @@ function HomePage() {
         {/* Grid de productos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
           {DUMMY_PRODUCTS.map((product) => (
-            <div key={product.id} className="bg-white rounded-3xl border border-stone-100 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 group cursor-pointer flex flex-col">
+            <Link to={`/producto/${product.id}`}  key={product.id} className="bg-white rounded-3xl border border-stone-100 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 group cursor-pointer flex flex-col">
               
               {/* Contenedor de la imagen: controla el tamaño máximo en el grid */}
               <div className="w-full aspect-square p-6 flex items-center justify-center bg-stone-50 overflow-hidden">
@@ -88,7 +88,7 @@ function HomePage() {
                   <p className="text-xl font-bold text-stone-950">{product.price}</p>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
