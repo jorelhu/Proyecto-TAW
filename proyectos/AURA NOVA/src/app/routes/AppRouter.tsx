@@ -4,7 +4,7 @@ import ProductDetailPage from "../../pages/ProductDetailPage";
 import HomePage from "../../pages/HomePage";
 import ProductsPage from "../..//pages/ProductsPage";
 import CartPage from "../../pages/CartPage";
-import LoginPage from "../../pages/LoginPage";
+import LoginPage from "../../features/auth/pages/LoginPage";
 import ScrollToTop from "../../shared/components/ScrollToTop";
 
 const AppRouter = () => {
