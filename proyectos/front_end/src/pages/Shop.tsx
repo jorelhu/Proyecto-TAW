@@ -2,43 +2,27 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import { type Product } from '../types';
-
-// Datos de prueba temporales (Simulando la respuesta de NestJS)
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Mystic Oud',
-    brand: 'AURA NOVA Privé',
-    description: 'Una fragancia magnética y profunda...',
-    variants: [{ id: 1, productId: 1, size: '50ml', price: 120.00, stock: 15 }],
-    images: [{ id: 1, productId: 1, imageUrl: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=600', isPrimary: true }],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    name: 'Soleil Blanc',
-    brand: 'AURA NOVA Fresh',
-    description: 'Un escape solar encapsulado...',
-    variants: [{ id: 3, productId: 2, size: '50ml', price: 95.00, stock: 20 }],
-    images: [{ id: 2, productId: 2, imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=600', isPrimary: true }],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-];
+import { api } from '../api/client'; // Importamos tu instancia de Axios configurada
 
 const Shop: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulamos la carga desde la API
+  // Llamada real a la API
   useEffect(() => {
     const fetchProducts = async () => {
-      // Aquí irá tu llamada a Axios: const { data } = await api.get('/products');
-      setTimeout(() => {
-        setProducts(mockProducts);
+      try {
+        setIsLoading(true);
+        // Hacemos el GET al backend de NestJS
+        const { data } = await api.get<Product[]>('/products');
+        setProducts(data);
+      } catch (err) {
+        console.error('Error al cargar los productos:', err);
+        setError('Tuvimos un problema al cargar la colección. Por favor, intenta de nuevo.');
+      } finally {
         setIsLoading(false);
-      }, 800); // Simulamos 800ms de retraso de red
+      }
     };
 
     fetchProducts();
@@ -56,10 +40,24 @@ const Shop: React.FC = () => {
         </p>
       </div>
 
-      {/* Grid de Productos */}
+      {/* Manejo de Estados: Cargando, Error o Catálogo */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <span className="text-xs uppercase tracking-widest text-neutral-400">Cargando colección...</span>
+          <span className="text-xs uppercase tracking-widest text-neutral-400 animate-pulse">
+            Cargando colección...
+          </span>
+        </div>
+      ) : error ? (
+        <div className="flex justify-center items-center h-64">
+          <span className="text-xs uppercase tracking-widest text-red-500">
+            {error}
+          </span>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="flex justify-center items-center h-64">
+          <span className="text-xs uppercase tracking-widest text-neutral-400">
+            Aún no hay fragancias en la colección.
+          </span>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-3 xl:gap-x-8">

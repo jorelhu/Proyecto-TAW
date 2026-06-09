@@ -1,3 +1,4 @@
+// products.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,11 +12,25 @@ export class ProductsService {
   ) {}
 
   async findAll(): Promise<Product[]> {
-    return await this.productsRepository.find();
+    return await this.productsRepository.find({
+      // CAMBIO AQUÍ: Usamos un objeto en lugar de un array de strings
+      relations: {
+        images: true,
+        variants: true,
+      },
+    });
   }
 
   async findOne(id: number): Promise<Product> {
-    const product = await this.productsRepository.findOneBy({ id });
+    const product = await this.productsRepository.findOne({
+      where: { id },
+      // CAMBIO AQUÍ TAMBIÉN
+      relations: {
+        images: true,
+        variants: true,
+      },
+    });
+
     if (!product) {
       throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
