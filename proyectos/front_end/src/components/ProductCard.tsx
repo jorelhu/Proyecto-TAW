@@ -9,11 +9,13 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // Buscamos la imagen principal, o tomamos la primera si no hay ninguna marcada
-  const primaryImage = product.images.find((img) => img.isPrimary)?.imageUrl || product.images[0]?.imageUrl;
+  const images = product.images || [];
+  const variants = product.variants || [];
+
+  const primaryImage = images.find((img) => img.isPrimary)?.imageUrl || images[0]?.imageUrl;
   
-  // Tomamos el precio de la primera variante como precio base
-  const basePrice = product.variants[0]?.price || 0;
+  // Convertimos explícitamente a número para ganarle a los caprichos de MySQL
+  const basePrice = Number(variants[0]?.price) || 0;
 
   return (
     <div className="group relative flex flex-col bg-white">
@@ -21,18 +23,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100">
         {primaryImage ? (
           <img
-            src={primaryImage}
+            src={primaryImage} // <-- Usamos la variable que ya calculamos arriba de forma segura
             alt={product.name}
             className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-neutral-300">
+          <div className="flex h-full w-full items-center justify-center text-xs uppercase tracking-widest text-neutral-400">
             Sin imagen
           </div>
         )}
         
         {/* Botón de acción rápida (Aparece al hacer hover) */}
-        <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10">
           <button className="flex w-full items-center justify-center space-x-2 bg-neutral-900/90 py-3 text-xs tracking-widest text-white uppercase backdrop-blur-sm transition-colors hover:bg-neutral-900">
             <ShoppingBag className="h-4 w-4" />
             <span>Añadir</span>
@@ -53,7 +55,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Link>
         </h3>
         <p className="mt-1 text-sm text-neutral-600">
-          {basePrice.toFixed(2)} Bs.
+          {basePrice > 0 ? `${basePrice.toFixed(2)} Bs.` : 'Próximamente'}
         </p>
       </div>
     </div>
