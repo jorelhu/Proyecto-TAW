@@ -37,9 +37,12 @@ export class ProductsService {
     return product;
   }
 
-  async create(data: Partial<Product>): Promise<Product> {
-    const product = this.productsRepository.create(data);
-    return await this.productsRepository.save(product);
+  async create(productData: any): Promise<Product> {
+    // 1. Crea la instancia en memoria
+    const newProduct = this.productsRepository.create(productData);
+    // 2. Guardamos y hacemos el doble cast seguro: de un supuesto array a unknown, y de ahí a Product
+    const savedProduct = await this.productsRepository.save(newProduct);
+    return savedProduct as unknown as Product;
   }
 
   async update(id: number, data: Partial<Product>): Promise<Product> {
