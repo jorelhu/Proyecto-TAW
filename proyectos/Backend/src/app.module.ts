@@ -13,6 +13,8 @@ import { ProductImage } from './product-images/product-image.entity';
 import { ProductVariant } from './product-variants/product-variant.entity';
 import { Order } from './orders/order.entity';
 import { OrderItem } from './orders/order-item.entity';
+import { AccessLog } from './access-logs/access-log.entity';
+import { AccessLogsModule } from './access-logs/access-logs.module';
 
 @Module({
   imports: [
@@ -30,6 +32,7 @@ import { OrderItem } from './orders/order-item.entity';
         ProductVariant,
         Order,
         OrderItem,
+        AccessLog,
       ],
       synchronize: false,
     }),
@@ -38,6 +41,7 @@ import { OrderItem } from './orders/order-item.entity';
     OrdersModule,
     ProductImagesModule,
     ProductVariantsModule,
+    AccessLogsModule,
   ],
 })
 export class AppModule {}
