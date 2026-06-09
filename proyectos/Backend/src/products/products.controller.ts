@@ -21,12 +21,14 @@ import { Product } from './product.entity';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ProductImagesService } from '../product-images/product-images.service';
+import { ProductVariantsService } from '../product-variants/product-variants.service';
 
 @Controller('products')
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly imagesService: ProductImagesService,
+    private readonly variantsService: ProductVariantsService,
   ) {}
 
   @Get()
@@ -106,11 +108,107 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      /* tu configuración de storage */
+    }),
+  )
   async update(
     @Param('id') id: string,
-    @Body() updateProductDto: Partial<Product>,
-  ): Promise<Product> {
-    return await this.productsService.update(+id, updateProductDto);
+    @Body() productData: any,
+    @UploadedFiles() files: Record<string, any>[],
+  ) {
+    // 1. Datos del producto base
+    const updatePayload = {
+      name: productData.name,
+      brand: productData.brand,
+      description: productData.description,
+      topNotes: productData.topNotes || '',
+      heartNotes: productData.heartNotes || '',
+      baseNotes: productData.baseNotes || '',
+    };
+    await this.productsService.update(+id, updatePayload);
+
+    // 2. ¡Aquí usamos tu servicio directamente!
+    if (productData.variants) {
+      try {
+        const variants = JSON.parse(productData.variants);
+        if (variants && variants.length > 0) {
+          const baseVariant = variants[0];
+          if (baseVariant.id) {
+            // Llama directo al service de variantes que ya tenías creado
+            await this.variantsService.update(+baseVariant.id, {
+              price: parseFloat(baseVariant.price) || 0,
+              stock: parseInt(baseVariant.stock) || 0,
+            });
+          } else {
+            // Si no hay ID por alguna razón, lo busca usando el método de tu servicio
+            const existingVariants =
+              await this.variantsService.findByProduct(+id);
+            if (existingVariants && existingVariants.length > 0) {
+              await this.variantsService.update(existingVariants[0].id, {
+                price: parseFloat(baseVariant.price) || 0,
+                stock: parseInt(baseVariant.stock) || 0,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error al actualizar variante:', e);
+      }
+    }
+
+    // 3. ¡AQUÍ ESTÁ EL CAMBIO CON TU SERVICIO DE VARIANTES!
+    if (productData.variants) {
+      try {
+        const variants = JSON.parse(productData.variants);
+
+        if (variants && variants.length > 0) {
+          const baseVariant = variants[0];
+
+          // Tu payload de React envía el ID de la variante si ya existía:
+          // editingProduct?.variants?.[0]?.id -> lo pusimos en el FormData como payload
+          if (baseVariant.id) {
+            // Si la variante ya tiene ID, la actualizamos usando tu método .update(id, data)
+            await this.variantsService.update(+baseVariant.id, {
+              price: parseFloat(baseVariant.price) || 0,
+              stock: parseInt(baseVariant.stock) || 0,
+            });
+          } else {
+            // Por seguridad, si por alguna razón no venía con ID, la buscamos por el productId
+            const existingVariants =
+              await this.variantsService.findByProduct(+id);
+            if (existingVariants && existingVariants.length > 0) {
+              await this.variantsService.update(existingVariants[0].id, {
+                price: parseFloat(baseVariant.price) || 0,
+                stock: parseInt(baseVariant.stock) || 0,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error al procesar la actualización de la variante:', e);
+      }
+    }
+
+    // 4. Procesar nuevas imágenes (Si las hay)
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const isPrimary = productData.primaryImageIndex
+          ? i === +productData.primaryImageIndex
+          : false;
+
+        await this.imagesService.create({
+          productId: +id,
+          imageUrl: `http://localhost:3000/uploads/products/${file.filename}`,
+          isPrimary: isPrimary,
+        });
+      }
+    }
+
+    // 5. Retornar el producto completamente refrescado con sus relaciones
+    return await this.productsService.findOne(+id);
   }
 
   @Delete(':id')
