@@ -75,6 +75,7 @@ const ProductForm: React.FC = () => {
       const fileInput = document.getElementById('imageInput') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
       
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage({ 
         text: error.response?.data?.message || 'Error al crear producto', 

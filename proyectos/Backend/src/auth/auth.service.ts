@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Usuario } from '../users/usuario.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { AccessLogsService } from '../access-logs/access-logs.service';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,8 @@ export class AuthService {
     @InjectRepository(Usuario)
     private usersRepository: Repository<Usuario>,
     private jwtService: JwtService,
-  ) {}
+    private accessLogsService: AccessLogsService,
+  ) { }
 
   async register(registerDto: RegisterDto) {
     // Verificar si el email ya existe
@@ -43,10 +45,16 @@ export class AuthService {
     await this.usersRepository.save(user);
 
     // Generar token JWT
-    const payload = { sub: user.id, email: user.email, name: user.name };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    };
     const access_token = this.jwtService.sign(payload);
 
     // Devolver usuario sin contraseña
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
 
     return {
@@ -57,36 +65,32 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    // Buscar usuario por email
     const user = await this.usersRepository.findOne({
       where: { email: loginDto.email },
+      // Cambiamos el select a un objeto, o mejor aún, simplemente quítalo por ahora
+      // para ver si el campo 'role' aparece solo.
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Credenciales incorrectas');
-    }
+    if (!user) throw new UnauthorizedException('Credenciales incorrectas');
 
-    // ✅ VERIFICAR CONTRASEÑA CON BCRYPT
+    // DEBUG: Imprime el usuario completo para ver qué propiedades tiene
+    console.log("Usuario encontrado:", JSON.stringify(user, null, 2));
+
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    if (!isPasswordValid) throw new UnauthorizedException('Credenciales incorrectas');
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales incorrectas');
-    }
-
-    // Generar token JWT
-    const payload = { sub: user.id, email: user.email, name: user.name };
-    const access_token = this.jwtService.sign(payload);
-
-    // Devolver usuario sin contraseña
     const { password, ...userWithoutPassword } = user;
 
     return {
       message: 'Inicio de sesión exitoso',
-      access_token,
+      access_token: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      }),
       user: userWithoutPassword,
     };
   }
-
   async getProfile(userId: number) {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
@@ -96,6 +100,7 @@ export class AuthService {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }

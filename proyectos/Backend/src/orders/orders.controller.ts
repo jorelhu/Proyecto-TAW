@@ -12,6 +12,7 @@ import {
 import { OrdersService } from './orders.service';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -36,8 +37,9 @@ export class OrdersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createOrder(@Body() createDto: Partial<Order>): Promise<Order> {
-    return await this.ordersService.createOrder(createDto);
+  async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
+    // Aquí le pasamos el DTO completo que ya tiene userId, total e items
+    return await this.ordersService.createOrder(createOrderDto);
   }
 
   @Patch(':id/status')

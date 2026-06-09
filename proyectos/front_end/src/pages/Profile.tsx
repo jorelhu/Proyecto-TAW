@@ -1,16 +1,32 @@
 // src/pages/Profile.tsx
+import { useEffect, useState } from 'react';
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { LogOut, Package, User } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { api } from '../api/client';
 
 const Profile: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        // Asumiendo que tienes un endpoint GET /orders/my-orders
+        const { data } = await api.get('/orders/my-orders');
+        setOrders(data);
+      } catch (err) {
+        console.error("Error al cargar pedidos:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Protección de ruta
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
+    if (isAuthenticated) fetchOrders();
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">

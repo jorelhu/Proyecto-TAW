@@ -1,13 +1,14 @@
 // src/pages/Register.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { api } from '../api/client';
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Estados para la validación de la contraseña
   const [strength, setStrength] = useState<{ level: number; label: string; color: string }>({ level: 0, label: '', color: 'bg-transparent' });
 
@@ -36,9 +37,11 @@ const Register: React.FC = () => {
     }
   }, [password]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Reemplazar la función handleSubmit en src/pages/Register.tsx
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (strength.level < 2) {
       alert("Por favor, utiliza una contraseña al menos de nivel Intermedio para proteger tu cuenta.");
       return;
@@ -46,12 +49,24 @@ const Register: React.FC = () => {
 
     setIsLoading(true);
 
-    // Aquí irá tu petición POST al backend: await api.post('/auth/register', { name, email, password })
-    // El backend de NestJS tomará este password y usará bcrypt.hash(password, 10) antes de guardarlo.
-    setTimeout(() => {
-      // Simulamos que se registró con éxito y lo mandamos al login
+    try {
+      // Envío real a NestJS AuthController
+      await api.post('/auth/register', {
+        name,
+        email,
+        password
+      });
+
+      alert('Cuenta de la Maison creada exitosamente. Procede al inicio de sesión.');
       navigate('/login');
-    }, 1000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error('Error en el registro:', err);
+      const msg = err.response?.data?.message || 'No se pudo crear la cuenta. El email podría estar en uso.';
+      alert(typeof msg === 'object' ? msg[0] : msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -67,8 +82,8 @@ const Register: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-2">
               <label className="text-[10px] font-medium uppercase tracking-widest text-neutral-900">Nombre Completo</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -78,8 +93,8 @@ const Register: React.FC = () => {
 
             <div className="space-y-2">
               <label className="text-[10px] font-medium uppercase tracking-widest text-neutral-900">Email</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -89,14 +104,14 @@ const Register: React.FC = () => {
 
             <div className="space-y-2">
               <label className="text-[10px] font-medium uppercase tracking-widest text-neutral-900">Contraseña</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full border-b border-neutral-300 bg-transparent py-3 text-sm font-light text-neutral-900 focus:border-neutral-900 focus:outline-none transition-colors"
               />
-              
+
               {/* Medidor de Fuerza de Contraseña */}
               {password.length > 0 && (
                 <div className="pt-2 animate-fadeIn">
@@ -115,7 +130,7 @@ const Register: React.FC = () => {
               )}
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isLoading || strength.level < 2}
               className="w-full bg-neutral-900 py-5 text-xs uppercase tracking-[0.2em] text-white transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -134,9 +149,9 @@ const Register: React.FC = () => {
 
       {/* Columna de Imagen (Oculta en móviles) */}
       <div className="hidden w-1/2 bg-neutral-900 lg:block relative">
-        <img 
-          src="https://images.unsplash.com/photo-1595535373192-fc89afe61233?q=80&w=1000" 
-          alt="Ingredientes Aura Nova" 
+        <img
+          src="https://images.unsplash.com/photo-1595535373192-fc89afe61233?q=80&w=1000"
+          alt="Ingredientes Aura Nova"
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
         <div className="absolute inset-0 flex flex-col justify-center px-16">

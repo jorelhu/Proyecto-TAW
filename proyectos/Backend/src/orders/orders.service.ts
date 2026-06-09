@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -54,9 +57,36 @@ export class OrdersService {
     });
   }
 
-  async createOrder(data: Partial<Order>): Promise<Order> {
-    const order = this.ordersRepository.create(data);
-    return await this.ordersRepository.save(order);
+  // En src/orders/orders.service.ts
+  // En src/orders/orders.service.ts
+
+  async createOrder(data: CreateOrderDto): Promise<Order> {
+    // Usa el DTO aquí
+    return await this.ordersRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const newOrder = this.ordersRepository.create({
+          userId: data.userId,
+          total: data.total,
+          status: 'pending',
+        });
+        const savedOrder = await transactionalEntityManager.save(
+          Order,
+          newOrder,
+        );
+
+        const orderItems = data.items.map((item) =>
+          this.orderItemsRepository.create({
+            orderId: savedOrder.id,
+            variantId: item.variant.id,
+            quantity: item.quantity,
+            price: item.variant.price,
+          }),
+        );
+
+        await transactionalEntityManager.save(OrderItem, orderItems);
+        return savedOrder;
+      },
+    );
   }
 
   async updateOrderStatus(id: number, status: string): Promise<Order> {

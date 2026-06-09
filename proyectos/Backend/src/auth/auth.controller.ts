@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   Controller,
   Post,
@@ -28,6 +29,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return this.authService.getProfile(req.user.userId);
   }
 }

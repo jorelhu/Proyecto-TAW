@@ -10,8 +10,9 @@ const Navbar: React.FC = () => {
   // Extraemos la función para contar items y para abrir/cerrar el carrito
   const cartCount = useCartStore((state) => state.cartCount());
   const toggleCart = useCartStore((state) => state.toggleCart);
+  
   const { isAuthenticated, user } = useAuthStore((state) => state);
-
+  console.log("Estado de Auth en Navbar:", { isAuthenticated, user });
   return (
     <nav className="sticky top-0 z-50 border-b border-neutral-200 bg-white/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

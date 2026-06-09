@@ -9,7 +9,7 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productsRepository: Repository<Product>,
-  ) { }
+  ) {}
 
   async findAll(): Promise<Product[]> {
     return await this.productsRepository.find({
@@ -45,28 +45,10 @@ export class ProductsService {
     return savedProduct as unknown as Product;
   }
 
-  async update(id: number, updateProductDto: any) {
-    // Esto solo toca la tabla 'product', por eso no necesita el repositorio de variantes
+  async update(id: number, updateProductDto: any): Promise<Product> {
+    // Este método solo debe actualizar la tabla de productos
     await this.productsRepository.update(id, updateProductDto);
     return this.findOne(id);
-  }
-
-  // NUEVO MÉTODO DE APOYO para actualizar la variante (Precio y Stock):
-  async updateProductVariant(
-    productId: number,
-    variantData: { price: number; stock: number },
-  ) {
-    // Si estás usando inyección del repositorio de Variantes en este servicio:
-    // (Asegúrate de tener @InjectRepository(Variant) private variantRepository: Repository<Variant> en el constructor)
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await this.variantRepository.update(
-      { product: { id: productId } }, // Busca la variante que pertenezca a este ID de producto
-      {
-        price: variantData.price,
-        stock: variantData.stock,
-      },
-    );
   }
 
   async remove(id: number): Promise<void> {

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Link } from 'react-router-dom';
+import { api } from '../api/client';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,24 +20,50 @@ const Login: React.FC = () => {
 
   // Reemplaza la función handleSubmit en src/pages/Login.tsx con esto:
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Reemplazar la función handleSubmit en src/pages/Login.tsx
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
-      // Si el correo es el del admin, le damos el rol ADMIN
-      const isSuperUser = email === 'admin@test.com';
-
-      login({
-        id: isSuperUser ? 1 : 2,
-        name: isSuperUser ? 'Admin Aura' : 'Cliente Privé',
-        email: email,
-        role: isSuperUser ? 'ADMIN' : 'USER',
+    try {
+      // Realizamos el POST real a tu controlador de NestJS
+      const { data } = await api.post('/auth/login', {
+        email,
+        password
       });
 
-      // Si es admin lo mandamos al dashboard, si es usuario al perfil
-      navigate(isSuperUser ? '/admin' : '/profile');
-    }, 800);
+      // Guardamos el token en localStorage o en los headers por defecto de tu cliente Axios
+      localStorage.setItem('token', data.access_token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+
+      // Pasamos el objeto user real devuelto por la base de datos a tu tienda Zustand
+      // En Login.tsx, dentro de handleSubmit:
+
+      console.log("Datos que recibo del backend:", data.user); // <--- MIRA ESTO EN LA CONSOLA
+
+      login({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        // Si el backend no envía el role, lo detectamos aquí por seguridad como parche:
+        role: data.user.role || (data.user.email === 'admin@test.com' ? 'ADMIN' : 'USER')
+      });
+
+      // Redirección inteligente basada en el rol de la BD
+      if (data.user.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/profile');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error('Error de autenticación:', err);
+      const msg = err.response?.data?.message || 'Credenciales inválidas. Inténtalo de nuevo.';
+      alert(typeof msg === 'object' ? msg[0] : msg); // Maneja errores de DTOs
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

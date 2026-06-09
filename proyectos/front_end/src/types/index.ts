@@ -28,3 +28,17 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+export interface Order {
+  id: number;
+  total: number;
+  status: string;
+  createdAt: string;
+  items: {
+    quantity: number;
+    price: number;
+    variant: {
+      size: string;
+      product: { name: string; imageUrl: string };
+    };
+  }[];
+}
