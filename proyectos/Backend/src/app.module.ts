@@ -15,6 +15,7 @@ import { Order } from './orders/order.entity';
 import { OrderItem } from './orders/order-item.entity';
 import { AccessLog } from './access-logs/access-log.entity';
 import { AccessLogsModule } from './access-logs/access-logs.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AccessLogsModule } from './access-logs/access-logs.module';
     ProductImagesModule,
     ProductVariantsModule,
     AccessLogsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
