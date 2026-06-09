@@ -21,16 +21,16 @@ const App: React.FC = () => {
         <CartDrawer />
 
         {/* Contenedor dinámico */}
-        <main className="flex-grow">
+         <main className="flex-grow pt-20 md:pt-24">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/Shop" element={<Shop />} />
+            <Route path="/shop" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/register" element={<Register />} />
             <Route path="/admin/products/new" element={<ProductForm />} />
           </Routes>
         </main>

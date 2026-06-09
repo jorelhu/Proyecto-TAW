@@ -19,7 +19,7 @@ export class AuthService {
     private usersRepository: Repository<Usuario>,
     private jwtService: JwtService,
     private accessLogsService: AccessLogsService,
-  ) { }
+  ) {}
 
   async register(registerDto: RegisterDto) {
     // Verificar si el email ya existe
@@ -74,11 +74,10 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
 
     // DEBUG: Imprime el usuario completo para ver qué propiedades tiene
-    console.log("Usuario encontrado:", JSON.stringify(user, null, 2));
+    console.log('Usuario encontrado:', JSON.stringify(user, null, 2));
 
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Credenciales incorrectas');
-
     const { password, ...userWithoutPassword } = user;
 
     return {

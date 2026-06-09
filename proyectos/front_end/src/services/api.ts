@@ -20,6 +20,7 @@ export interface ProductResponse {
   baseNotes: string;
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string; 
 }
 
 const api = axios.create({
@@ -40,6 +41,10 @@ export const productService = {
   // Obtener todos los productos
   getAll: async (): Promise<ProductResponse[]> => {
     const response = await api.get('/products');
+    return response.data;
+  },
+    getOne: async (id: number): Promise<ProductResponse> => {
+    const response = await api.get(`/products/${id}`);
     return response.data;
   },
 };

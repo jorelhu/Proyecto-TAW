@@ -1,12 +1,17 @@
 // src/pages/Home.tsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Leaf } from 'lucide-react';
-// No necesitas Menu, ShoppingBag, User porque ya están en el Navbar global
+import { productService, type ProductResponse } from '../services/api';
 
 const Home: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
+  
+  // ✅ Estado para los productos
+  const [featuredProducts, setFeaturedProducts] = useState<ProductResponse[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -25,9 +30,29 @@ const Home: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // ✅ Cargar productos desde el backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const products = await productService.getAll();
+        // Mostrar los primeros 3 productos como destacados
+        setFeaturedProducts(products.slice(0, 3));
+        setError(null);
+      } catch (err) {
+        console.error('Error al cargar productos:', err);
+        setError('No se pudieron cargar los productos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="flex flex-col w-full">
-      {/* Hero Section - sin el header duplicado */}
+      {/* Hero Section */}
       <section className="relative h-[85vh] min-h-[600px] w-full bg-emerald-900">
         <div className="absolute inset-0 overflow-hidden">
           <img
@@ -117,21 +142,52 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Productos destacados */}
+      {/* ✅ Productos Destacados - DESDE EL BACKEND */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <h2 className="mb-10 text-center text-2xl font-light tracking-[0.15em] text-emerald-800 uppercase">Productos Destacados</h2>
+        
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="text-center text-red-600 py-8">
+            {error}
+          </div>
+        )}
+        
+        {!loading && !error && featuredProducts.length === 0 && (
+          <div className="text-center text-emerald-600 py-8">
+            No hay productos disponibles por el momento.
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {[1,2,3].map((i) => (
-            <div key={i} className="group rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-xl">
+          {featuredProducts.map((product) => (
+            <Link 
+              key={product.id} 
+              to={`/product/${product.id}`}
+              className="group rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-xl"
+            >
               <div className="aspect-square overflow-hidden rounded-lg">
-                <img src={`https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800`} alt="Perfume" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                {/* Si tienes imágenes asociadas al producto */}
+                <img 
+                  src={product.imageUrl || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800"} 
+                  alt={product.name} 
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105" 
+                  loading="lazy"
+                />
               </div>
-              <h3 className="mt-4 text-center text-lg font-light text-emerald-800">Aura Verde Nº{i}</h3>
-              <p className="text-center text-sm text-emerald-600">€ {89 + i*10}</p>
+              <h3 className="mt-4 text-center text-lg font-light text-emerald-800">{product.name}</h3>
+              <p className="text-center text-sm text-emerald-600">{product.brand}</p>
+              {/* Si tienes precio, descomenta: */}
+              {/* <p className="text-center text-sm text-emerald-600">€ {product.price}</p> */}
               <button className="mt-3 w-full border border-emerald-600 py-2 text-xs uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-600 hover:text-white">
                 Ver producto
               </button>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
