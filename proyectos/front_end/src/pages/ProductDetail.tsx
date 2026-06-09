@@ -90,7 +90,7 @@ const ProductDetail: React.FC = () => {
                         {product.name}
                     </h1>
                     <p className="text-xl font-light text-neutral-600 mb-8">
-                        ${selectedVariant.price.toFixed(2)}
+                        {selectedVariant.price.toFixed(2)} Bs.
                     </p>
 
                     <p className="text-sm font-light leading-relaxed tracking-wide text-neutral-600 mb-10">
@@ -142,12 +142,12 @@ const ProductDetail: React.FC = () => {
                         className="flex w-full items-center justify-center space-x-3 bg-neutral-900 py-5 text-sm tracking-[0.2em] text-white uppercase transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <ShoppingBag className="h-5 w-5" />
-                        <span>Añadir al carrito — ${selectedVariant.price.toFixed(2)}</span>
+                        <span>Añadir al carrito — {selectedVariant.price.toFixed(2)} Bs.</span>
                     </button>
 
                     {/* Información extra de envío */}
                     <div className="mt-6 text-center">
-                        <span className="text-[10px] tracking-widest text-neutral-400 uppercase">Envío de cortesía en todas las colecciones</span>
+                        <span className="text-[10px] tracking-widest text-neutral-400 uppercase">Envío de encomienda a coordinar</span>
                     </div>
                 </div>
             </div>

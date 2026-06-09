@@ -53,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Link>
         </h3>
         <p className="mt-1 text-sm text-neutral-600">
-          ${basePrice.toFixed(2)}
+          {basePrice.toFixed(2)} Bs.
         </p>
       </div>
     </div>
