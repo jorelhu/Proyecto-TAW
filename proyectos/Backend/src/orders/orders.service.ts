@@ -11,7 +11,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
-    private ordersRepository: Repository<Order>,
+    private ordersRepository: Repository<Order>, // <--- AQUÍ DEBE ESTAR
     @InjectRepository(OrderItem)
     private orderItemsRepository: Repository<OrderItem>,
   ) {}
@@ -58,7 +58,21 @@ export class OrdersService {
   }
 
   // En src/orders/orders.service.ts
-  // En src/orders/orders.service.ts
+
+  async findByUser(userId: number): Promise<Order[]> {
+    return await this.ordersRepository.find({
+      where: { userId },
+      // Usamos un objeto en lugar de un arreglo de strings
+      relations: {
+        items: {
+          variant: {
+            product: true,
+          },
+        },
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
 
   async createOrder(data: CreateOrderDto): Promise<Order> {
     // Usa el DTO aquí

@@ -1,42 +1,53 @@
-// src/pages/Profile.tsx
 import { useEffect, useState } from 'react';
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { LogOut, Package, User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
+import { api } from '../api/client'; // 1. Usamos tu cliente configurado (ajusta la ruta si es necesario)
 import { useAuthStore } from '../store/authStore';
-import { api } from '../api/client';
+import type { Order } from '../types';
 
 const Profile: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchOrders = async () => {
+    const cargarPedidos = async () => {
       try {
-        // Asumiendo que tienes un endpoint GET /orders/my-orders
-        const { data } = await api.get('/orders/my-orders');
-        setOrders(data);
-      } catch (err) {
-        console.error("Error al cargar pedidos:", err);
+        const token = localStorage.getItem('token');
+
+        // 2. Usamos 'api.get' y solo la ruta relativa
+        const response = await api.get('/orders/my-orders', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setOrders(response.data);
+      } catch (error) {
+        console.error("Error al cargar pedidos:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (isAuthenticated) fetchOrders();
-  }, [isAuthenticated]);
+    if (isAuthenticated && user) {
+      cargarPedidos();
+    }
+  }, [isAuthenticated, user]);
 
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      {/* Encabezado */}
       <div className="mb-12 flex flex-col items-center justify-between border-b border-neutral-200 pb-8 sm:flex-row">
         <div>
           <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-neutral-900 mb-2">Mi Maison</h1>
           <p className="text-xs uppercase tracking-widest text-neutral-500">Bienvenido de vuelta, {user.name}</p>
         </div>
-        
-        <button 
+
+        <button
           onClick={logout}
           className="mt-6 flex items-center space-x-2 text-xs uppercase tracking-widest text-neutral-500 hover:text-neutral-900 sm:mt-0 transition-colors"
         >
@@ -45,8 +56,9 @@ const Profile: React.FC = () => {
         </button>
       </div>
 
+      {/* Contenido Principal */}
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-3">
-        {/* Detalles de la Cuenta */}
+        {/* Detalles de la Cuenta (Ocupa 1 columna) */}
         <div className="lg:col-span-1">
           <div className="bg-neutral-50 p-8 border border-neutral-100">
             <div className="flex items-center space-x-3 mb-6">
@@ -64,39 +76,53 @@ const Profile: React.FC = () => {
           </div>
         </div>
 
-        {/* Historial de Pedidos (Mock) */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center space-x-3 mb-8">
-            <Package className="h-5 w-5 text-neutral-900" />
-            <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-900">Historial de Pedidos</h2>
-          </div>
-
-          <div className="space-y-6">
-            {/* Pedido de Ejemplo */}
-            <div className="border border-neutral-200 bg-white p-6 transition-shadow hover:shadow-sm">
-              <div className="flex flex-col justify-between border-b border-neutral-100 pb-4 sm:flex-row sm:items-center">
-                <div className="mb-4 sm:mb-0">
-                  <span className="block text-[10px] uppercase tracking-widest text-neutral-500">Orden #AN-8472</span>
-                  <span className="text-sm font-light text-neutral-900">01 de Junio, 2026</span>
+        {/* Historial de Pedidos Realizados (Ocupa 2 columnas) */}
+        <div className="space-y-6 lg:col-span-2">
+          {loading ? (
+            <p className="text-sm uppercase tracking-widest text-neutral-400">Cargando pedidos...</p>
+          ) : orders.length === 0 ? (
+            <p className="text-sm font-light text-neutral-500">No tienes pedidos realizados aún.</p>
+          ) : (
+            orders.map((order) => (
+              <div key={order.id} className="border border-neutral-200 bg-white p-6">
+                <div className="flex justify-between border-b border-neutral-100 pb-4">
+                  <div>
+                    <span className="block text-[10px] uppercase tracking-widest text-neutral-500">Orden #{order.id}</span>
+                    <span className="text-sm font-light text-neutral-900">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block bg-neutral-900 px-3 py-1 text-[9px] uppercase tracking-widest text-white mb-2">
+                      {order.status}
+                    </span>
+                    <p className="text-sm font-medium text-neutral-900">${Number(order.total).toFixed(2)}</p>
+                  </div>
                 </div>
-                <div className="text-left sm:text-right">
-                  <span className="inline-block bg-neutral-900 px-3 py-1 text-[9px] uppercase tracking-widest text-white mb-2">Entregado</span>
-                  <p className="text-sm font-medium text-neutral-900">$195.00</p>
+                
+                {/* Iterar ítems del pedido */}
+                <div className="divide-y divide-neutral-100">
+                  {order.items?.map((item, idx) => (
+                    <div key={idx} className="py-4 flex items-center space-x-4 first:pt-4 last:pb-0">
+                      <div className="h-16 w-12 bg-neutral-100 flex-shrink-0">
+                        <img 
+                          src={item.variant?.product?.imageUrl || 'https://via.placeholder.com/150'} 
+                          alt={item.variant?.product?.name} 
+                          className="h-full w-full object-cover" 
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-neutral-900">{item.variant?.product?.name || 'Producto'}</p>
+                        <p className="text-[10px] uppercase tracking-widest text-neutral-500 mt-1">
+                          {item.variant?.size || 'U'} — Cantidad: {item.quantity}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="pt-4 flex items-center space-x-4">
-                <div className="h-16 w-12 bg-neutral-100 flex-shrink-0">
-                  <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=200" alt="Perfume" className="h-full w-full object-cover" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-neutral-900">Soleil Blanc</p>
-                  <p className="text-[10px] uppercase tracking-widest text-neutral-500 mt-1">100ml — Qty: 1</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Puedes agregar más pedidos mock aquí si lo deseas */}
-          </div>
+            ))
+          )}
         </div>
       </div>
     </div>
