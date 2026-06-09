@@ -16,20 +16,27 @@ const Login: React.FC = () => {
     return <Navigate to="/profile" replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+ // Reemplaza la función handleSubmit en src/pages/Login.tsx con esto:
 
-    // Simulamos una petición al backend de NestJS
-    setTimeout(() => {
-      login({
-        id: 1,
-        name: 'Admin Aura',
-        email: email,
-      });
-      navigate('/profile');
-    }, 800);
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  setTimeout(() => {
+    // Si el correo es el del admin, le damos el rol ADMIN
+    const isSuperUser = email === 'admin@test.com';
+    
+    login({
+      id: isSuperUser ? 1 : 2,
+      name: isSuperUser ? 'Admin Aura' : 'Cliente Privé',
+      email: email,
+      role: isSuperUser ? 'ADMIN' : 'USER',
+    });
+    
+    // Si es admin lo mandamos al dashboard, si es usuario al perfil
+    navigate(isSuperUser ? '/admin' : '/profile');
+  }, 800);
+};
 
   return (
     <div className="flex min-h-[85vh] w-full">

@@ -5,11 +5,12 @@ import { ShoppingBag, User, Menu } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 
+
 const Navbar: React.FC = () => {
   // Extraemos la función para contar items y para abrir/cerrar el carrito
   const cartCount = useCartStore((state) => state.cartCount());
   const toggleCart = useCartStore((state) => state.toggleCart);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuthStore((state) => state);
 
   return (
     <nav className="sticky top-0 z-50 border-b border-neutral-200 bg-white/80 backdrop-blur-md">
@@ -26,7 +27,7 @@ const Navbar: React.FC = () => {
             <Link to="/shop" className="hover:text-neutral-900 transition-colors duration-200">
               Colecciones
             </Link>
-            
+
           </div>
 
           <div className="flex flex-1 justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
@@ -36,6 +37,11 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-6 text-neutral-600">
+            {isAuthenticated && user?.role === 'ADMIN' && (
+              <Link to="/admin" className="hidden text-[10px] font-medium uppercase tracking-widest text-neutral-400 hover:text-neutral-900 md:block transition-colors">
+                Admin
+              </Link>
+            )}
             <Link
               to={isAuthenticated ? "/profile" : "/login"}
               className="hover:text-neutral-900 transition-colors duration-200"

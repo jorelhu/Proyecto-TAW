@@ -9,6 +9,7 @@ import CartDrawer from './components/CartDrawer';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 
 const App: React.FC = () => {
   return (
@@ -27,6 +28,7 @@ const App: React.FC = () => {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </main>
 
