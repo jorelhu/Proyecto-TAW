@@ -11,7 +11,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import Register from './pages/Register';
-
+import ProductForm from './components/ProductForm';
 const App: React.FC = () => {
   return (
     <Router>
@@ -31,6 +31,7 @@ const App: React.FC = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/admin/products/new" element={<ProductForm />} />
           </Routes>
         </main>
 
