@@ -1,4 +1,3 @@
-// src/users/usuario.entity.ts
 import {
   Entity,
   Column,
@@ -9,6 +8,7 @@ import {
 } from 'typeorm';
 import { Order } from '../orders/order.entity';
 import { AccessLog } from '../access-logs/access-log.entity';
+
 @Entity('usuario')
 export class Usuario {
   @PrimaryGeneratedColumn()
@@ -21,7 +21,7 @@ export class Usuario {
   email: string;
 
   @Column({ length: 255 })
-  password: string; // Recuerda encriptar con bcrypt
+  password: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -31,6 +31,7 @@ export class Usuario {
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
+
   @OneToMany(() => AccessLog, (accessLog) => accessLog.user)
   accessLogs: AccessLog[];
 }
