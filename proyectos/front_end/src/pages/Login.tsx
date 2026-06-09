@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { Link } from 'react-router-dom';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
@@ -16,35 +17,35 @@ const Login: React.FC = () => {
     return <Navigate to="/profile" replace />;
   }
 
- // Reemplaza la función handleSubmit en src/pages/Login.tsx con esto:
+  // Reemplaza la función handleSubmit en src/pages/Login.tsx con esto:
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  setTimeout(() => {
-    // Si el correo es el del admin, le damos el rol ADMIN
-    const isSuperUser = email === 'admin@test.com';
-    
-    login({
-      id: isSuperUser ? 1 : 2,
-      name: isSuperUser ? 'Admin Aura' : 'Cliente Privé',
-      email: email,
-      role: isSuperUser ? 'ADMIN' : 'USER',
-    });
-    
-    // Si es admin lo mandamos al dashboard, si es usuario al perfil
-    navigate(isSuperUser ? '/admin' : '/profile');
-  }, 800);
-};
+    setTimeout(() => {
+      // Si el correo es el del admin, le damos el rol ADMIN
+      const isSuperUser = email === 'admin@test.com';
+
+      login({
+        id: isSuperUser ? 1 : 2,
+        name: isSuperUser ? 'Admin Aura' : 'Cliente Privé',
+        email: email,
+        role: isSuperUser ? 'ADMIN' : 'USER',
+      });
+
+      // Si es admin lo mandamos al dashboard, si es usuario al perfil
+      navigate(isSuperUser ? '/admin' : '/profile');
+    }, 800);
+  };
 
   return (
     <div className="flex min-h-[85vh] w-full">
       {/* Columna de Imagen (Oculta en móviles) */}
       <div className="hidden w-1/2 bg-neutral-900 lg:block relative">
-        <img 
-          src="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1000" 
-          alt="Textura Aura Nova" 
+        <img
+          src="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1000"
+          alt="Textura Aura Nova"
           className="absolute inset-0 h-full w-full object-cover opacity-80"
         />
         <div className="absolute inset-0 flex flex-col justify-center px-16">
@@ -66,8 +67,8 @@ const handleSubmit = (e: React.FormEvent) => {
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-2">
               <label className="text-[10px] font-medium uppercase tracking-widest text-neutral-900">Email</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -77,8 +78,8 @@ const handleSubmit = (e: React.FormEvent) => {
 
             <div className="space-y-2">
               <label className="text-[10px] font-medium uppercase tracking-widest text-neutral-900">Contraseña</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -86,7 +87,7 @@ const handleSubmit = (e: React.FormEvent) => {
               />
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-neutral-900 py-5 text-xs uppercase tracking-[0.2em] text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
@@ -95,10 +96,13 @@ const handleSubmit = (e: React.FormEvent) => {
             </button>
           </form>
 
-          <div className="mt-8 text-center lg:text-left">
+          <div className="mt-8 flex flex-col space-y-4 text-center lg:text-left">
             <button className="text-[10px] uppercase tracking-widest text-neutral-500 underline hover:text-neutral-900">
               ¿Olvidaste tu contraseña?
             </button>
+            <Link to="/register" className="text-[10px] uppercase tracking-widest text-neutral-900 hover:text-neutral-600 transition-colors font-medium">
+              Crear una cuenta nueva
+            </Link>
           </div>
         </div>
       </div>
