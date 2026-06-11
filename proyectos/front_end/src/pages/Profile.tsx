@@ -28,6 +28,29 @@ const Profile: React.FC = () => {
     if (isAuthenticated && user) cargarPedidos();
   }, [isAuthenticated, user]);
 
+  // Manejador para interceptar el logout y registrar el evento en la BD
+  const handleLogout = async () => {
+    if (user) {
+      try {
+        // Obtenemos el ID dinámicamente según lo configurado en tu JWT
+        const userId = user.id; 
+
+        await api.post('/access-logs', {
+          userId,
+          ipAddress: 'IP Cliente', // String provisional para cumplir con la entidad del backend
+          eventType: 'LOGOUT',
+          browser: navigator.userAgent, // Captura detalles del entorno del cliente
+        });
+      } catch (error) {
+        // Silenciamos el error en interfaz para no frustrar la salida si falla el servidor de logs
+        console.error("Error al registrar el log de cierre de sesión:", error);
+      }
+    }
+    
+    // Proceso habitual de limpieza de tokens y estados de Zustand/React Router
+    logout();
+  };
+
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
 
   return (
@@ -40,7 +63,7 @@ const Profile: React.FC = () => {
         </div>
 
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="mt-6 flex items-center space-x-2 text-xs uppercase tracking-widest text-emerald-600 hover:text-emerald-800 sm:mt-0 transition-colors"
         >
           <LogOut className="h-4 w-4" />

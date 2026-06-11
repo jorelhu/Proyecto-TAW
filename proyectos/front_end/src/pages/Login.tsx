@@ -22,26 +22,44 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // 1. Iniciar sesión
       const { data } = await api.post('/auth/login', {
         email,
         password
       });
 
+      // 2. Guardar token y configurar Axios
       localStorage.setItem('token', data.access_token);
       api.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
 
+      // 3. Actualizar estado de autenticación
       login({
-        id: data.user.id,
+        id: data.user.id || data.user.userId, // Ajusta según la estructura exacta que devuelve tu backend
         name: data.user.name,
         email: data.user.email,
         role: data.user.role || (data.user.email === 'admin@test.com' ? 'ADMIN' : 'USER')
       });
 
+      // ---> NUEVO: Registrar el Log de Acceso <---
+      try {
+        await api.post('/access-logs', {
+          userId: data.user.id || data.user.userId,
+          ipAddress: 'IP Cliente', // Ver nota abajo sobre la IP
+          eventType: 'LOGIN',
+          browser: navigator.userAgent // Captura el navegador y sistema operativo del usuario
+        });
+      } catch (logError) {
+        // Solo lo imprimimos en consola para no bloquear al usuario si el log falla
+        console.error('Error al registrar el log de acceso:', logError);
+      }
+
+      // 4. Redireccionar
       if (data.user.role === 'ADMIN') {
         navigate('/admin');
       } else {
         navigate('/profile');
       }
+
     } catch (err: unknown) {
       console.error('Error de autenticación:', err);
 
@@ -55,7 +73,7 @@ const Login: React.FC = () => {
 
       const error = err as ErrorResponse;
       const msg = error.response?.data?.message || 'Credenciales inválidas. Inténtalo de nuevo.';
-      alert(typeof msg === 'object' ? msg[0] : msg); // Maneja errores de DTOs
+      alert(typeof msg === 'object' ? msg[0] : msg);
     } finally {
       setIsLoading(false);
     }

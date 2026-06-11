@@ -21,7 +21,7 @@ const App: React.FC = () => {
         <CartDrawer />
 
         {/* Contenedor dinámico */}
-         <main className="flex-grow pt-20 md:pt-24">
+        <main className="flex-grow pt-20 md:pt-24">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
