@@ -5,7 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
-import { statsService,type StatsResponse } from '../services/stats.service';
+import { statsService, type StatsResponse } from '../services/stats.service';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -33,39 +33,58 @@ const AdminStats: React.FC = () => {
   }, []);
 
   const generatePDF = async () => {
-    if (!reportRef.current) return;
+    if (!reportRef.current) {
+      alert('No se encontró el contenido para generar el PDF.');
+      return;
+    }
     setGeneratingPdf(true);
     try {
+      // Pequeña pausa para garantizar que todos los gráficos están renderizados
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       const canvas = await html2canvas(reportRef.current, {
-        scale: 2,           // Mejor resolución
+        scale: 2,
         backgroundColor: '#ffffff',
         logging: false,
+        useCORS: true,          // Para imágenes externas
+        allowTaint: false,
+        // Mejorar captura de SVG (Recharts)
+        onclone: (clonedDoc, element) => {
+          // Opcional: forzar estilos en el clon si fuera necesario
+          const svgs = element.querySelectorAll('svg');
+          svgs.forEach(svg => {
+            svg.setAttribute('width', String(svg.clientWidth));
+            svg.setAttribute('height', String(svg.clientHeight));
+          });
+        }
       });
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
-      const imgWidth = 210; // mm (A4 width)
+      const imgWidth = 210; // mm
       const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
       let position = 0;
+      let remainingHeight = imgHeight;
 
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      remainingHeight -= pageHeight;
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
+      while (remainingHeight > 0) {
+        position = remainingHeight - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        remainingHeight -= pageHeight;
       }
-      pdf.save('reporte-estadisticas.pdf');
+
+      pdf.save(`reporte_estadisticas_${new Date().toISOString().slice(0,19)}.pdf`);
     } catch (error) {
-      console.error('Error generando PDF:', error);
-      alert('Ocurrió un error al generar el PDF');
+      console.error('Error detallado al generar PDF:', error);
+      alert(`Ocurrió un error al generar el PDF: ${error instanceof Error ? error.message : error}`);
     } finally {
       setGeneratingPdf(false);
     }
@@ -107,7 +126,7 @@ const AdminStats: React.FC = () => {
               className="flex items-center space-x-2 bg-emerald-700 px-4 py-2 text-xs uppercase tracking-widest text-white rounded hover:bg-emerald-800 transition-colors disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
-              <span>{generatingPdf ? 'Generando...' : 'Reporte PDF'}</span>
+              <span>{generatingPdf ? 'Generando PDF...' : 'Reporte PDF'}</span>
             </button>
             <Link
               to="/admin"
@@ -194,7 +213,7 @@ const AdminStats: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Tabla resumen de productos (opcional, mejora el reporte) */}
+          {/* Tabla resumen de productos */}
           {stats.topProducts.length > 0 && (
             <div className="mt-8">
               <h2 className="text-xl font-light text-emerald-800 mb-4">Detalle de Productos</h2>
