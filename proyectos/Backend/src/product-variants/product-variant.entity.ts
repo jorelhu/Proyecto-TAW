@@ -20,6 +20,9 @@ export class ProductVariant {
   @Column({ length: 100 })
   size!: string;
 
+  //@Column({ length: 50 })
+  //concentration!: string;
+
   @Column('decimal', { precision: 10, scale: 2 })
   price!: number;
 
