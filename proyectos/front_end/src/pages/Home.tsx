@@ -59,7 +59,7 @@ const Home: React.FC = () => {
       <section className="relative h-[90vh] min-h-[650px] w-full bg-emerald-950">
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1601049676869-702ea24cfd58?q=80&w=2070"
+            src="https://img.magnific.com/fotos-premium/botella-vidrio-perfume-manos-femeninas-suaves-novia-rocia-perfume-su-cuerpo-foto-primer-plano-manicure-manana-novia_964739-10947.jpg?semt=ais_hybrid&w=740&q=80"
             alt="AURA NOVA Esencia Natural"
             className="h-full w-full object-cover opacity-35 transition-transform duration-10000 scale-100 hover:scale-105"
             loading="eager"
@@ -115,7 +115,7 @@ const Home: React.FC = () => {
             {/* Removido redondeado (rounded-2xl) para adoptar cortes ortogonales limpios */}
             <div className="aspect-[4/5] overflow-hidden bg-neutral-50 shadow-sm">
               <img
-                src="https://images.unsplash.com/photo-1592911597212-5e6a6780da62?q=80&w=800"
+                src="https://aromasfenpal.com/wp-content/uploads/2025/01/perfume-fecha-de-caducidad-1536x1025.jpg"
                 alt="Ingredientes botánicos y destilación"
                 className="h-full w-full object-cover transition-transform duration-700 hover:scale-103"
                 loading="lazy"
@@ -135,9 +135,9 @@ const Home: React.FC = () => {
           
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
             {[
-              "https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=800",
+              "https://farmacorp.com/cdn/shop/files/6975525902402_704x704.jpg?v=1769026632",
               "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=800",
-              "https://images.unsplash.com/photo-1615397323068-d06990bf9e39?q=80&w=800",
+              "https://farmacorp.com/cdn/shop/files/7506306249998_704x704.jpg?v=1769026257",
               "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=800"
             ].map((url, i) => (
               <div key={i} className="overflow-hidden bg-white shadow-sm transition-all duration-500 hover:shadow-md">

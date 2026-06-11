@@ -38,6 +38,7 @@ const Checkout: React.FC = () => {
       alert('Debes iniciar sesión para completar la orden.');
       return;
     }
+
     const orderData = {
       userId: user.id,
       total: total,
@@ -54,18 +55,29 @@ const Checkout: React.FC = () => {
 
       items.forEach((item) => {
         message += `• *${item.product.name}* (${item.variant.size})%0A`;
-        message += `  Cantidad: ${item.quantity} | Subtotal: $${(item.variant.price * item.quantity).toFixed(2)}%0A%0A`;
+        message += `  Cantidad: ${item.quantity} | Subtotal: ${(item.variant.price * item.quantity).toFixed(2)} Bs.%0A%0A`;
       });
 
       message += `---%0A`;
-      message += `*Total Neto:* $${total.toFixed(2)}%0A%0A`;
+      message += `*Subtotal:* ${subtotal.toFixed(2)} Bs.%0A`;
+      message += `*Envío:* ${coordinarCentro ? 'Gratis (Centro)' : `${shippingCost.toFixed(2)} Bs.`}%0A`;
+      message += `*Total Neto:* ${total.toFixed(2)} Bs.%0A%0A`;
+      
       message += `*Datos del Cliente:*%0A`;
-      message += `• *Nombre:* ${user.name}%0A`;
-      message += `• *Email:* ${user.email}`;
+      message += `• *Nombre:* ${name} ${lastName}%0A`;
+      message += `• *Email:* ${email}%0A`;
+
+      // Acople dinámico del método de entrega / dirección
+      if (coordinarCentro) {
+        message += `• *Entrega:* Coordinar punto de encuentro en el Centro.%0A`;
+      } else {
+        message += `• *Dirección de Envío:* ${address}%0A`;
+      }
 
       window.open(`https://wa.me/59175209520?text=${message}`, '_blank');
 
-      // useCartStore.getState().clearCart(); // si tienes la función
+      // Si cuentas con la función de limpiar carrito descoméntala:
+      // useCartStore.getState().clearCart();
 
     } catch (error) {
       console.error("Error al registrar la orden:", error);
@@ -153,7 +165,7 @@ const Checkout: React.FC = () => {
               type="submit"
               className="mt-8 w-full bg-emerald-800 py-5 text-sm uppercase tracking-[0.2em] text-white transition-colors hover:bg-emerald-700"
             >
-              Solicitar pedido por WhatsApp — ${total.toFixed(2)}
+              Solicitar pedido por WhatsApp — {total.toFixed(2)} Bs.
             </button>
           </form>
         </div>
@@ -174,7 +186,7 @@ const Checkout: React.FC = () => {
                     <div className="flex flex-1 flex-col justify-center">
                       <div className="flex justify-between">
                         <span className="text-xs uppercase tracking-wide text-emerald-900">{item.product.name}</span>
-                        <span className="text-xs text-emerald-900">${(item.variant.price * item.quantity).toFixed(2)}</span>
+                        <span className="text-xs text-emerald-900">{(item.variant.price * item.quantity).toFixed(2)} Bs.</span>
                       </div>
                       <span className="mt-1 text-[10px] uppercase tracking-widest text-emerald-500">
                         {item.variant.size} — Cantidad: {item.quantity}
@@ -188,19 +200,19 @@ const Checkout: React.FC = () => {
             <div className="space-y-4 border-t border-emerald-200 pt-6 text-sm font-light text-emerald-700">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{subtotal.toFixed(2)} Bs.</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Envío</span>
                 {coordinarCentro ? (
                   <span className="rounded-sm border border-emerald-200 bg-white px-2 py-1 text-[10px] uppercase tracking-widest text-emerald-500">Centro (Gratis)</span>
                 ) : (
-                  <span>$20.00</span>
+                  <span>20.00 Bs.</span>
                 )}
               </div>
               <div className="flex justify-between border-t border-emerald-200 pt-4 text-base font-medium text-emerald-900">
                 <span className="text-xs uppercase tracking-widest">Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{total.toFixed(2)} Bs.</span>
               </div>
             </div>
           </div>

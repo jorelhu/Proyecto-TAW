@@ -54,7 +54,7 @@ const CartDrawer: React.FC = () => {
                                             <div>
                                                 <div className="flex justify-between">
                                                     <h3 className="text-sm tracking-wide text-emerald-900 uppercase">{item.product.name}</h3>
-                                                    <p className="text-sm text-emerald-900">${(item.variant.price * item.quantity).toFixed(2)}</p>
+                                                    <p className="text-sm text-emerald-900">{(item.variant.price * item.quantity).toFixed(2)} Bs.</p>
                                                 </div>
                                                 <p className="mt-1 text-[10px] tracking-widest text-emerald-600 uppercase">{item.variant.size}</p>
                                             </div>
@@ -95,7 +95,7 @@ const CartDrawer: React.FC = () => {
                     <div className="border-t border-emerald-100 bg-emerald-50 px-6 py-8">
                         <div className="flex justify-between text-sm uppercase tracking-wide text-emerald-900 mb-6">
                             <span>Subtotal</span>
-                            <span>${cartTotal().toFixed(2)}</span>
+                            <span>{cartTotal().toFixed(2)} Bs.</span>
                         </div>
                         <button
                             onClick={handleCheckout}
