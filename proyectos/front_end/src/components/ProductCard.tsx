@@ -6,20 +6,19 @@ import { ShoppingBag } from 'lucide-react';
 import { type Product } from '../types/';
 
 // 👇 Define la URL base de tu backend (ajusta según tu entorno)
-const API_BASE_URL = 'http://localhost:3000'; // o usa variable de entorno
+// o usa variable de entorno
 
 interface ProductCardProps {
   product: Product;
 }
-
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const images = product.images || [];
   const variants = product.variants || [];
 
-  // 🔁 Cambio 1: usar 'url' en lugar de 'imageUrl' (o manten ambos si no estás seguro)
+  // 🔁 Cambios limpios: usamos la URL directa sin variables duplicadas
   const primaryImageObj = images.find((img) => img.isPrimary) || images[0];
-  const relativePath = primaryImageObj?.url || primaryImageObj?.imageUrl;
-  const imageUrl = relativePath ? `${API_BASE_URL}${relativePath}` : null;
+  const rawUrl = primaryImageObj?.url || primaryImageObj?.imageUrl;
+  const imageUrl = rawUrl ? rawUrl : null;
 
   const basePrice = Number(variants[0]?.price) || 0;
 
