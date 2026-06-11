@@ -6,7 +6,7 @@ import {
   Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import { statsService, type StatsResponse } from '../services/stats.service';
-import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image';
 import jsPDF from 'jspdf';
 
 const AdminStats: React.FC = () => {
@@ -42,24 +42,14 @@ const AdminStats: React.FC = () => {
       // Pequeña pausa para garantizar que todos los gráficos están renderizados
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        logging: false,
-        useCORS: true,          // Para imágenes externas
-        allowTaint: false,
-        // Mejorar captura de SVG (Recharts)
-        onclone: (clonedDoc, element) => {
-          // Opcional: forzar estilos en el clon si fuera necesario
-          const svgs = element.querySelectorAll('svg');
-          svgs.forEach(svg => {
-            svg.setAttribute('width', String(svg.clientWidth));
-            svg.setAttribute('height', String(svg.clientHeight));
-          });
-        }
+      const dataUrl = await domtoimage.toPng(reportRef.current, {
+        quality: 1,
+        bgcolor: '#ffffff',
+        style: {
+          backgroundColor: '#ffffff',
+        },
       });
 
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -67,23 +57,23 @@ const AdminStats: React.FC = () => {
       });
       const imgWidth = 210; // mm
       const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgHeight = (reportRef.current.clientHeight * imgWidth) / reportRef.current.clientWidth;
       let position = 0;
       let remainingHeight = imgHeight;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
       remainingHeight -= pageHeight;
 
       while (remainingHeight > 0) {
         position = remainingHeight - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
         remainingHeight -= pageHeight;
       }
 
-      pdf.save(`reporte_estadisticas_${new Date().toISOString().slice(0,19)}.pdf`);
+      pdf.save(`reporte_estadisticas_${new Date().toISOString().slice(0, 19)}.pdf`);
     } catch (error) {
-      console.error('Error detallado al generar PDF:', error);
+      console.error('Error generando PDF:', error);
       alert(`Ocurrió un error al generar el PDF: ${error instanceof Error ? error.message : error}`);
     } finally {
       setGeneratingPdf(false);
