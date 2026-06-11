@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/require-await */
 import {
   Controller,
   Get,
@@ -16,31 +11,42 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
-  BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // ✅ Ruta relativa
+
+interface RequestWithUser extends Request {
+  user: {
+    userId: number;
+    email: string;
+    name: string;
+  };
+}
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   // ==========================================
-  // 1. RUTAS FIJAS / FILTROS ESPECÍFICOS (SIEMPRE ARRIBA)
+  // 1. RUTAS FIJAS / FILTROS ESPECÍFICOS (SIN PARÁMETROS DINÁMICOS)
   // ==========================================
 
   @Get()
   async findAllOrders(): Promise<Order[]> {
     return await this.ordersService.findAllOrders();
   }
-
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
+    return await this.ordersService.createOrder(createOrderDto);
+  }
   @UseGuards(JwtAuthGuard)
   @Get('my-orders')
-  async getMyOrders(@Request() req: any) {
-    // Apuntamos directamente a .userId que es donde viene el identificador 123126
+  async getMyOrders(@Request() req: RequestWithUser) {
     return await this.ordersService.findByUser(req.user.userId);
   }
 
@@ -56,26 +62,19 @@ export class OrdersController {
     return await this.ordersService.findOrdersByUser(userId);
   }
 
-  // ==========================================
-  // 2. RUTAS DE ACCIÓN (POST / CREACIÓN)
-  // ==========================================
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
-    return await this.ordersService.createOrder(createOrderDto);
-  }
-
-  @Post('items')
-  @HttpCode(HttpStatus.CREATED)
-  async createOrderItem(
-    @Body() createDto: Partial<OrderItem>,
-  ): Promise<OrderItem> {
-    return await this.ordersService.createOrderItem(createDto);
+  // ✅ Ruta de estadísticas (debe ir ANTES de @Get(':id'))
+  @Get('stats')
+  async getStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.ordersService.getStats(start, end);
   }
 
   // ==========================================
-  // 3. RUTAS CON SUB-RECURSOS O RUTAS COMPUESTAS
+  // 2. RUTAS CON SUB-RECURSOS (pero que contienen un ID)
   // ==========================================
 
   @Get('items/:id')
@@ -107,7 +106,7 @@ export class OrdersController {
   }
 
   // ==========================================
-  // 4. RUTAS DINÁMICAS GENÉRICAS (SIEMPRE AL FINAL)
+  // 3. RUTAS DINÁMICAS GENÉRICAS (SIEMPRE AL FINAL)
   // ==========================================
 
   @Get(':id')

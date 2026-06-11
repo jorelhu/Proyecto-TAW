@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { Order } from './order.entity';
 import { ProductVariant } from '../product-variants/product-variant.entity';
@@ -32,4 +33,6 @@ export class OrderItem {
   @ManyToOne(() => ProductVariant, (variant) => variant.orderItems)
   @JoinColumn({ name: 'variantId' })
   variant!: ProductVariant;
+  @CreateDateColumn()
+  createdAt: Date;
 }

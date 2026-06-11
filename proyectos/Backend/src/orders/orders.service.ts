@@ -1,17 +1,21 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
-
+interface RawProductStat {
+  productId: string | number;
+  productName: string;
+  totalQuantity: string | number;
+  totalRevenue: string | number;
+}
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
-    private ordersRepository: Repository<Order>, // <--- AQUÍ DEBE ESTAR
+    private ordersRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private orderItemsRepository: Repository<OrderItem>,
   ) {}
@@ -57,12 +61,9 @@ export class OrdersService {
     });
   }
 
-  // En src/orders/orders.service.ts
-
   async findByUser(userId: number): Promise<Order[]> {
     return await this.ordersRepository.find({
       where: { userId },
-      // Usamos un objeto en lugar de un arreglo de strings
       relations: {
         items: {
           variant: {
@@ -75,7 +76,6 @@ export class OrdersService {
   }
 
   async createOrder(data: CreateOrderDto): Promise<Order> {
-    // Usa el DTO aquí
     return await this.ordersRepository.manager.transaction(
       async (transactionalEntityManager) => {
         const newOrder = this.ordersRepository.create({
@@ -171,7 +171,72 @@ export class OrdersService {
   async removeOrderItem(id: number): Promise<void> {
     const result = await this.orderItemsRepository.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`Item de orden con ID ${id} no encontrado`);
+      throw new NotFoundException(`Item de orden con ID ${id} no encontrada`);
     }
+  }
+
+  // ========== ESTADÍSTICAS PARA GRÁFICOS ==========
+  async getStats(startDate?: Date, endDate?: Date) {
+    const end = endDate || new Date();
+    const start = startDate || new Date();
+    start.setDate(start.getDate() - 30); // Por defecto últimos 30 días
+
+    // 1. Totales generales
+    const orders = await this.ordersRepository.find({
+      where: { createdAt: Between(start, end) },
+    });
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // 2. Ventas diarias
+    const dailySalesMap = new Map<string, { total: number; count: number }>();
+    orders.forEach((order) => {
+      const date = order.createdAt.toISOString().split('T')[0];
+      const existing = dailySalesMap.get(date) || { total: 0, count: 0 };
+      existing.total += Number(order.total);
+      existing.count += 1;
+      dailySalesMap.set(date, existing);
+    });
+    const dailySales = Array.from(dailySalesMap.entries())
+      .map(([date, data]) => ({
+        date,
+        total: data.total,
+        count: data.count,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    // 3. Productos más vendidos
+    const topProductsRaw = await this.orderItemsRepository
+      .createQueryBuilder('item')
+      .leftJoin('item.variant', 'variant')
+      .leftJoin('variant.product', 'product')
+      .where('item.createdAt BETWEEN :start AND :end', { start, end })
+      .select([
+        'product.id as productId',
+        'product.name as productName',
+        'SUM(item.quantity) as totalQuantity',
+        'SUM(item.price * item.quantity) as totalRevenue',
+      ])
+      .groupBy('product.id')
+      .orderBy('totalQuantity', 'DESC')
+      .limit(5)
+      .getRawMany();
+
+    const topProducts = (topProductsRaw as RawProductStat[]).map(
+      (p: RawProductStat) => ({
+        productId: Number(p.productId),
+        productName: p.productName,
+        totalQuantity: parseInt(p.totalQuantity as string, 10),
+        totalRevenue: parseFloat(p.totalRevenue as string),
+      }),
+    );
+
+    return {
+      totalOrders,
+      totalRevenue,
+      averageOrderValue,
+      dailySales,
+      topProducts,
+    };
   }
 }

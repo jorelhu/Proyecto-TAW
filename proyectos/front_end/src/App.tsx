@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import Register from './pages/Register';
 import ProductForm from './components/ProductForm';
+import AdminStats from './pages/AdminStats';
 const App: React.FC = () => {
   return (
     <Router>
@@ -31,6 +32,7 @@ const App: React.FC = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/stats" element={<AdminStats />} />
             <Route path="/admin/products/new" element={<ProductForm />} />
           </Routes>
         </main>
