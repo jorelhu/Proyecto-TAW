@@ -5,7 +5,8 @@ import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { ProductImagesModule } from './product-images/product-images.module';
 import { ProductVariantsModule } from './product-variants/product-variants.module';
-
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 // Importar entidades
 import { Usuario } from './users/usuario.entity';
 import { Product } from './products/product.entity';
@@ -36,6 +37,12 @@ import { AuthModule } from './auth/auth.module';
         AccessLog,
       ],
       synchronize: false,
+    }),
+    ServeStaticModule.forRoot({
+      // Apunta directamente a tu carpeta física de subidas
+      rootPath: join(__dirname, '..', 'uploads'),
+      // El prefijo que usarás en la URL del navegador
+      serveRoot: '/static',
     }),
     UsersModule,
     ProductsModule,

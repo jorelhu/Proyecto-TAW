@@ -14,14 +14,21 @@ export interface ProductResponse {
   id: number;
   name: string;
   brand: string;
-  description: string;
-  topNotes: string;
-  heartNotes: string;
-  baseNotes: string;
-  createdAt: string;
-  updatedAt: string;
-  imageUrl?: string; 
-}
+  description?: string;
+  topNotes?: string;
+  heartNotes?: string;
+  baseNotes?: string;
+  variants: Array<{
+    id: number;
+    size: string;
+    price: number;
+    stock: number;
+  }>;
+  images: Array<{
+    id: number;
+    imageUrl: string;   // ← o 'url' según lo que devuelva tu backend
+    isPrimary: boolean;
+  }>;}
 
 const api = axios.create({
   baseURL: 'http://localhost:3000',

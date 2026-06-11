@@ -12,9 +12,9 @@ export interface ProductImage {
   id: number;
   productId: number;
   imageUrl: string;
+  url?: string;  
   isPrimary: boolean;
 }
-
 export interface Product {
   id: number;
   name: string;

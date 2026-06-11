@@ -164,32 +164,46 @@ const Home: React.FC = () => {
           </div>
         )}
         
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredProducts.map((product) => (
-            <Link 
-              key={product.id} 
-              to={`/product/${product.id}`}
-              className="group rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-xl"
-            >
-              <div className="aspect-square overflow-hidden rounded-lg">
-                {/* Si tienes imágenes asociadas al producto */}
-                <img 
-                  src={product.imageUrl || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800"} 
-                  alt={product.name} 
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105" 
-                  loading="lazy"
-                />
-              </div>
-              <h3 className="mt-4 text-center text-lg font-light text-emerald-800">{product.name}</h3>
-              <p className="text-center text-sm text-emerald-600">{product.brand}</p>
-              {/* Si tienes precio, descomenta: */}
-              {/* <p className="text-center text-sm text-emerald-600">€ {product.price}</p> */}
-              <button className="mt-3 w-full border border-emerald-600 py-2 text-xs uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-600 hover:text-white">
-                Ver producto
-              </button>
-            </Link>
-          ))}
+       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+  {featuredProducts.map((product) => {
+    // 🖼️ Buscamos el objeto de la imagen dentro del arreglo
+    const primaryImageObject = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+    // Guardamos la URL completa que ya viene lista desde tu backend
+    const rawImageUrl = primaryImageObject?.imageUrl;
+
+    // Si existe, la asignamos directo sin concatenarle nada antes
+    const imageUrl = rawImageUrl ? rawImageUrl : null;
+
+    return (
+      <Link
+        key={product.id}
+        to={`/product/${product.id}`}
+        className="group rounded-2xl bg-white p-4 shadow-md transition-shadow hover:shadow-xl"
+      >
+        <div className="aspect-square overflow-hidden rounded-lg bg-emerald-50">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs uppercase text-emerald-400">
+              Sin imagen
+            </div>
+          )}
         </div>
+        <h3 className="mt-4 text-center text-lg font-light text-emerald-800">{product.name}</h3>
+        <p className="text-center text-sm text-emerald-600">{product.brand}</p>
+        <button className="mt-3 w-full border border-emerald-600 py-2 text-xs uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-600 hover:text-white">
+          Ver producto
+        </button>
+      </Link>
+    );
+  })}
+</div>
       </section>
     </div>
   );
