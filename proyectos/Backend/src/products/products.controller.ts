@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // src/products/products.controller.ts
@@ -110,13 +109,28 @@ export class ProductsController {
   @Patch(':id')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      /* tu configuración de storage */
+      storage: diskStorage({
+        destination: './uploads/products',
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('Solo imágenes permitidas'), false);
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   async update(
     @Param('id') id: string,
     @Body() productData: any,
-    @UploadedFiles() files: Record<string, any>[],
+    @UploadedFiles() files: Record<string, any>[], // <-- Usamos la misma estructura que en create
   ) {
     // 1. Datos del producto base
     const updatePayload = {
@@ -129,27 +143,32 @@ export class ProductsController {
     };
     await this.productsService.update(+id, updatePayload);
 
-    // 2. ¡Aquí usamos tu servicio directamente!
+    // 2. Actualizar variantes (Limpiado el código duplicado que tenías)
     if (productData.variants) {
       try {
-        const variants = JSON.parse(productData.variants);
+        const variants =
+          typeof productData.variants === 'string'
+            ? JSON.parse(productData.variants)
+            : productData.variants;
+
         if (variants && variants.length > 0) {
-          const baseVariant = variants[0];
-          if (baseVariant.id) {
-            // Llama directo al service de variantes que ya tenías creado
-            await this.variantsService.update(+baseVariant.id, {
+          // Recorremos todas las variantes enviadas, no solo la primera
+          for (const baseVariant of variants) {
+            const variantPayload = {
               price: parseFloat(baseVariant.price) || 0,
               stock: parseInt(baseVariant.stock) || 0,
-            });
-          } else {
-            // Si no hay ID por alguna razón, lo busca usando el método de tu servicio
-            const existingVariants =
-              await this.variantsService.findByProduct(+id);
-            if (existingVariants && existingVariants.length > 0) {
-              await this.variantsService.update(existingVariants[0].id, {
-                price: parseFloat(baseVariant.price) || 0,
-                stock: parseInt(baseVariant.stock) || 0,
-              });
+              size: baseVariant.size || 'Generico', // <-- ¡CRÍTICO: Asegurar la propiedad size!
+              productId: +id,
+            };
+
+            if (baseVariant.id) {
+              // Si la variante ya existe, la actualizamos
+              await this.variantsService.update(
+                +baseVariant.id,
+                variantPayload,
+              );
+            } else {
+              await this.variantsService.create(variantPayload);
             }
           }
         }
@@ -158,56 +177,34 @@ export class ProductsController {
       }
     }
 
-    // 3. ¡AQUÍ ESTÁ EL CAMBIO CON TU SERVICIO DE VARIANTES!
-    if (productData.variants) {
-      try {
-        const variants = JSON.parse(productData.variants);
-
-        if (variants && variants.length > 0) {
-          const baseVariant = variants[0];
-
-          // Tu payload de React envía el ID de la variante si ya existía:
-          // editingProduct?.variants?.[0]?.id -> lo pusimos en el FormData como payload
-          if (baseVariant.id) {
-            // Si la variante ya tiene ID, la actualizamos usando tu método .update(id, data)
-            await this.variantsService.update(+baseVariant.id, {
-              price: parseFloat(baseVariant.price) || 0,
-              stock: parseInt(baseVariant.stock) || 0,
-            });
-          } else {
-            // Por seguridad, si por alguna razón no venía con ID, la buscamos por el productId
-            const existingVariants =
-              await this.variantsService.findByProduct(+id);
-            if (existingVariants && existingVariants.length > 0) {
-              await this.variantsService.update(existingVariants[0].id, {
-                price: parseFloat(baseVariant.price) || 0,
-                stock: parseInt(baseVariant.stock) || 0,
-              });
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Error al procesar la actualización de la variante:', e);
-      }
-    }
-
-    // 4. Procesar nuevas imágenes (Si las hay)
+    // 3. Procesar nuevas imágenes (Si las hay)
     if (files && files.length > 0) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+
+        // Verificación de seguridad para asegurar que Multer procesó el archivo
+        const finalFilename = file.filename || file.name;
+        if (!finalFilename) {
+          console.error(
+            'El archivo no contiene un nombre válido de Multer:',
+            file,
+          );
+          continue;
+        }
+
         const isPrimary = productData.primaryImageIndex
           ? i === +productData.primaryImageIndex
           : false;
 
         await this.imagesService.create({
           productId: +id,
-          imageUrl: `http://localhost:3000/uploads/products/${file.filename}`,
+          imageUrl: `http://localhost:3000/uploads/products/${finalFilename}`,
           isPrimary: isPrimary,
         });
       }
     }
 
-    // 5. Retornar el producto completamente refrescado con sus relaciones
+    // 4. Retornar el producto completamente refrescado con sus relaciones
     return await this.productsService.findOne(+id);
   }
 

@@ -120,13 +120,13 @@ const ProductDetail: React.FC = () => {
                                     <button
                                         key={variant.id}
                                         onClick={() => setSelectedVariant(variant)}
-                                        className={`px-6 py-3 text-xs uppercase tracking-widest transition-all duration-200 ${
-                                            selectedVariant.id === variant.id
+                                        className={`px-6 py-3 text-xs uppercase tracking-widest transition-all duration-200 ${selectedVariant.id === variant.id
                                                 ? 'border-2 border-emerald-800 bg-emerald-800 text-white'
                                                 : 'border border-emerald-200 text-emerald-600 hover:border-emerald-600'
-                                        }`}
+                                            }`}
                                     >
-                                        {variant.size}
+                                        {/* Cambiado: Si variant.size no existe por base de datos, muestra un fallback */}
+                                        {variant.size || 'Presentación Única'}
                                     </button>
                                 ))}
                             </div>
